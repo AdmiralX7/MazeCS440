@@ -94,8 +94,6 @@ def part_5(unknown, known, start, goal):
     o1 = a_star.repeated_a_star(unknown, known, start, goal, 'max_g_score', 'forwards')
     e3 = time.time()
 
-
-
     print(f"Repeated Forward A-star: {o1['path_to_goal']}")
     # for x in range(len(o1['expanded'])):
     #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
