@@ -1,216 +1,166 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.colors as mcolors
+import random
+
+import a_star
+import generate_mazes
+import os
 import random
 import json
 import time
 
-# ------------------ FUNCTIONS ------------------
-def chooseRandomCell():
-    unvisitedCells = []
-    for x in range(len(grid)):
-        for y in range(len(grid[0])):
-            if not grid[x][y]['visited'] and not grid[x][y]['blocked']:
-                unvisitedCells.append((x, y))
 
-    if not unvisitedCells:
-        return None  # No more unvisited cells
-    
-    return random.choice(unvisitedCells)
+# Comparison Tests
 
-def getNeighbors(x, y):
-    neighbors = []
+def part_2(unknown, known, start, goal):
+    # Forward A Star with both ties
+    t1 = time.time()
+    o1 = a_star.repeated_a_star(unknown, known, start, goal, tie='min_g_score', direction='forwards')
+    e1 = time.time()
 
-    # Check the North neighbor
-    if not grid[x - 1][y]['visited'] and not grid[x - 1][y]['blocked']:
-        neighbors.append((x - 1, y))
+    print(f"Repeated Forward A-star (favoring lower g-values): {o1['path_to_goal']}")
+    # for x in range(len(o1['expanded'])):
+    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
+    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
 
-    # Check the South neighbor
-    if not grid[x + 1][y]['visited'] and not grid[x + 1][y]['blocked']:
-        neighbors.append((x + 1, y))
+    total = 0
+    for x in o1['expanded']:
+        total += len(x)
 
-    # Check the West neighbor
-    if not grid[x][y - 1]['visited'] and not grid[x][y - 1]['blocked']:
-        neighbors.append((x, y - 1))
+    print(f"Total cells expanded: {total}")
 
-    # Check the East neighbor
-    if not grid[x][y + 1]['visited'] and not grid[x][y + 1]['blocked']:
-        neighbors.append((x, y + 1))
+    print((e1 - t1) * 10 ** 3, "ms")
 
-    return neighbors
+    print("---------------------")
 
-def blockProbability(x, y):
-    if random.random() < 0.3:  # 30% probability
-        grid[x][y]['blocked'] = True
-        return True
-    else:  # 70% probability
-        grid[x][y]['blocked'] = False
-        return False
+    t2 = time.time()
+    o2 = a_star.repeated_a_star(unknown, known, start, goal, "max_g_score", "forwards")
+
+    print(f"Repeated Forward A-star (favoring higher g-values): {o2['path_to_goal']}")
+    # for x in range(len(o2['expanded'])):
+    #     print(f"Iteration {x + 1}: {o2['expanded'][x]}")
+    #     print(f'Num of Cells expanded: {len(o2["expanded"][x])}')
+
+    total = 0
+    for x in o2['expanded']:
+        total += len(x)
+
+    print(f"Total cells expanded: {total}")
+    e2 = time.time()
+    print((e2 - t2) * 10 ** 3, "ms")
 
 
-def mazeArray(receivedGrid):
-    # Create an array of 1's and 0's from the grid
-    gridArray = []
-    for row in receivedGrid:
-        newRow = []
-        for cell in row:
-            if cell['blocked']:
-                newRow.append(1)
-            else:
-                newRow.append(0)
-        gridArray.append(newRow)
+def part_3(unknown, known, start, goal):
+    # Comparing A-star forward vs. backward
+    t3 = time.time()
+    o1 = a_star.repeated_a_star(unknown, known, start, goal, 'max_g_score', 'forwards')
+    e3 = time.time()
 
-    return gridArray
+    print(f"Repeated Forward A-star: {o1['path_to_goal']}")
+    # for x in range(len(o1['expanded'])):
+    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
+    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
 
-def displayMaze(receivedArray):
+    total = 0
+    for x in o1['expanded']:
+        total += len(x)
 
-    # Convert gridArray to a numpy array for imshow
-    npArray = np.array(receivedArray)
-    
-    # Save the grid array to a text file
-    np.savetxt('mazeGrid.txt', npArray, fmt='%d')
+    print(f"Total cells expanded: {total}")
 
-    # Define a custom colormap: white for 0 and black for 1
-    cmap = mcolors.ListedColormap(['white', 'black'])
+    print((e3 - t3) * 10 ** 3, "ms")
 
-    # Display the maze
-    plt.imshow(npArray, cmap=cmap, interpolation='none')
-    plt.title('Maze Visualization')
-    plt.show()
+    print("---------------------")
 
-def saveGridsToJson(receivedGrid, filename='grids.json'):
-    gridsList = []
-    
-    for grid in receivedGrid:
-        gridArray = []
-        for row in grid:
-            newRow = []
-            for cell in row:
-                newRow.append(1 if cell['blocked'] else 0)
-            gridArray.append(newRow)
-        gridsList.append(gridArray)
-    
-    with open(filename, 'w') as f:
-        json.dump(gridsList, f)
+    t4 = time.time()
 
-# Function to load grids from a JSON file
-def loadGridsFromJson(filename='grids.json'):
-    with open(filename, 'r') as f:
-        gridsList = json.load(f)
-    
-    # Convert back to grid format if needed
-    grids = []
-    for gridArray in gridsList:
-        grid = []
-        for row in gridArray:
-            newRow = [{'blocked': bool(cell), 'visited': False} for cell in row]
-            grid.append(newRow)
-        grids.append(grid)
-    
-    return grids
+    o1 = a_star.repeated_a_star(unknown, known, start, goal, 'max_g_score', 'backwards')
+    e4 = time.time()
 
-# --------------------- MAIN ---------------------
-if __name__ == '__main__':
-    # Start the timer
-    startTime = time.time()
+    print(f"Repeated Backward A-star: {o1['path_to_goal']}")
+    # for x in range(len(o1['expanded'])):
+    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
+    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
 
-    allGrid = []
+    total = 0
+    for x in o1['expanded']:
+        total += len(x)
 
-    # Simulate saving 50 grids
-    for i in range(50):
-        # --------------- MAP Initialization ---------------
-        
-        gridSize = 101
-        # Initialize an empty grid list
-        grid = []
+    print(f"Total cells expanded: {total}")
 
-        # Create each row and add to the grid
-        for i in range(gridSize):
-            row = []
-            for j in range(gridSize):
-                # Append a dictionary to the row
-                row.append({'visited': False, 'blocked': False})
-            
-            # Append the row to the grid
-            grid.append(row)
+    print((e4 - t4) * 10 ** 3, "ms")
 
-        # Add blocked boundaries around the edges
-        for i in range(gridSize):
-            grid[0][i]['blocked'] = True   # Top boundary
-            grid[gridSize-1][i]['blocked'] = True   # Bottom boundary
-            grid[i][0]['blocked'] = True   # Left boundary
-            grid[i][gridSize-1]['blocked'] = True   # Right boundary
 
-        # Stack to manage the DFS traversal
-        stack = []
+def part_5(unknown, known, start, goal):
+    # Repeated Forward vs. Adaptive A-Star
+    t3 = time.time()
+    o1 = a_star.repeated_a_star(unknown, known, start, goal, 'max_g_score', 'forwards')
+    e3 = time.time()
 
-        # Simulate the runner moving through the maze
-        movements = []
 
-        while True:
-            # If the stack is empty, choose a new random starting position
-            if not stack:
-                # Choose a random starting point within the grid
-                initialCell = chooseRandomCell()
 
-                if not initialCell:
-                    
-                    print("All cells have been visited. Exiting the code.")
-                    break  # Exit the loop and terminate the program
+    print(f"Repeated Forward A-star: {o1['path_to_goal']}")
+    # for x in range(len(o1['expanded'])):
+    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
+    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
 
-                InitialX, InitialY = initialCell
+    total = 0
+    for x in o1['expanded']:
+        total += len(x)
 
-                stack.append((InitialX, InitialY))
-                movements.append((InitialX, InitialY))
+    print(f"Total cells expanded: {total}")
 
-                # Mark the start cell as visited
-                grid[InitialX][InitialY]['visited'] = True
-                # print(f"New starting point chosen: ({InitialX}, {InitialY})")
+    print((e3 - t3) * 10 ** 3, "ms")
 
-            # Current position is the last position in the stack
-            currentX, currentY = stack[-1]
+    print("---------------------")
 
-            possibleMoves = getNeighbors(currentX, currentY)
-            
-            if not possibleMoves:
-                # No more moves from this position, backtrack
-                stack.pop()
-            else:
-                # Randomly choose a neighbor to move to
-                nextMove = random.choice(possibleMoves)
-                # print("Attempting to move to:", nextMove)
+    t4 = time.time()
+    o1 = a_star.adaptive_a_star(unknown, known, start, goal)
+    e4 = time.time()
 
-                if blockProbability(nextMove[0], nextMove[1]):
-                    # print("Blocked cell encountered:", nextMove)
-                    grid[nextMove[0]][nextMove[1]]['visited'] = True
-                    grid[nextMove[0]][nextMove[1]]['blocked'] = True
-                    possibleMoves.remove(nextMove)
-                    movements.append(nextMove)
-                    movements.append((currentX,currentY))
-                    
-                else:
-                    # print("Moving to:", nextMove)
-                    stack.append(nextMove)
-                    movements.append(nextMove)
-                    grid[nextMove[0]][nextMove[1]]['visited'] = True
+    print(f"Adaptive A-star: {o1['path_to_goal']}")
+    # for x in range(len(o1['expanded'])):
+    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
+    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
 
-        allGrid.append(grid)
-    """
-        grid = mazeArray(grid)
-        displayMaze(grid)
-    """
+    total = 0
+    for x in o1['expanded']:
+        total += len(x)
 
-    saveGridsToJson(allGrid)
-    loadedGrids = loadGridsFromJson()
+    print(f"Total cells expanded: {total}")
 
-    # Stop the timer
-    endTime = time.time()
+    print((e4 - t4) * 10 ** 3, "ms")
 
-    # Calculate and print the total time taken
-    totalTime = endTime - startTime
-    print(f"Total time taken: {totalTime:.2f} seconds")
 
-    # To access a specific grid, say the first one:
-    firstGrid = loadedGrids[0]
-    firstGrid = mazeArray(firstGrid)
-    displayMaze(firstGrid)
+if __name__ == "__main__":
+
+    if not os.path.isfile('./grids.json'):
+        generate_mazes.generate()
+
+    rand_grid_num = random.randint(0, 49)
+
+    with open('grids.json', 'r') as file:
+        rand_grid = json.load(file)
+        rand_grid = rand_grid[rand_grid_num]
+
+    rand_start = random.randint(1, 101), random.randint(1, 101)
+    rand_goal = random.randint(1, 101), random.randint(1, 101)
+
+    while rand_grid[rand_start[0]][rand_start[1]] == 1:
+        rand_start = random.randint(1, 101), random.randint(1, 101)
+    while rand_grid[rand_goal[0]][rand_goal[1]] == 1:
+        rand_goal = random.randint(1, 101), random.randint(1, 101)
+
+    print("Comparing Repeated Forward A-Star with both ties")
+    part_2(unknown="empty_maze.json", known=rand_grid, start=rand_start, goal=rand_goal)
+
+    print("=============================="
+          "=============================="
+          "==============================")
+
+    print("Comparing Repeated Forward vs. Backward A-Star")
+    part_3(unknown="empty_maze.json", known=rand_grid, start=rand_start, goal=rand_goal)
+
+    print("=============================="
+          "=============================="
+          "==============================")
+
+    print("Comparing Adaptive vs Repeated Forward A-Star")
+    part_5(unknown="empty_maze.json", known=rand_grid, start=rand_start, goal=rand_goal)
