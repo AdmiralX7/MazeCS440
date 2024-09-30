@@ -2,6 +2,7 @@ import random
 
 import a_star
 import generate_mazes
+import traceDisplay
 import os
 import random
 import json
@@ -20,6 +21,9 @@ def part_2(unknown, known, start, goal):
     # for x in range(len(o1['expanded'])):
     #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
     #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
+
+    # Send the maze (known) and path to traceDisplay
+    traceDisplay.display(rand_grid, o1['path_to_goal'])
 
     total = 0
     for x in o1['expanded']:
