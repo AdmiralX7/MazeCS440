@@ -147,7 +147,7 @@ def repeated_a_star(unknown_maze: str, known_maze: str, start: tuple, goal: tupl
         path = path[0]
 
         if path is None:
-            return rep_path
+            return {'path_to_goal': [], 'expanded': []}
         if direction == 'backwards':
             path = path[::-1]
 
@@ -159,6 +159,7 @@ def repeated_a_star(unknown_maze: str, known_maze: str, start: tuple, goal: tupl
 
                 break
             else:
+                unknown_maze = update_obstacles(curr_cell, unknown_maze, known_maze)
                 rep_path['path_to_goal'].append(path[step])
                 curr_cell = path[step]
     return rep_path
@@ -170,10 +171,7 @@ def adaptive_a_star(unknown, known_maze, start: tuple, goal: tuple):
     with open(unknown, 'r') as file:
         unknown_maze = json.load(file)
         unknown_maze = unknown_maze[0]
-    #
-    # with open(known, 'r') as file:
-    #     known_maze = json.load(file)
-    #     known_maze = known_maze[0]
+
 
     rep_path = {'path_to_goal': [], 'expanded': []}
 
@@ -186,7 +184,7 @@ def adaptive_a_star(unknown, known_maze, start: tuple, goal: tuple):
         # print(h_score)
         path = path[0]
         if path is None:
-            return None
+            return {'path_to_goal': [], 'expanded': []}
         for step in range(len(path)):
             if is_obstacle(path[step], known_maze):
                 curr_cell = path[step - 1]
@@ -195,6 +193,7 @@ def adaptive_a_star(unknown, known_maze, start: tuple, goal: tuple):
 
                 break
             else:
+                unknown_maze = update_obstacles(curr_cell, unknown_maze, known_maze)
                 rep_path['path_to_goal'].append(path[step])
                 curr_cell = path[step]
 
@@ -206,6 +205,5 @@ def is_obstacle(cell, known_maze):
         return True
     else:
         return False
-
 
 

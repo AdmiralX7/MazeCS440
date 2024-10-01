@@ -1,168 +1,45 @@
 import random
-
-import a_star
+import comparisons
 import generate_mazes
-import traceDisplay
+import maze_display
 import os
-import random
 import json
-import time
-
-
-# Comparison Tests
-
-def part_2(unknown, known, start, goal):
-    # Forward A Star with both ties
-    t1 = time.time()
-    o1 = a_star.repeated_a_star(unknown, known, start, goal, tie='min_g_score', direction='forwards')
-    e1 = time.time()
-
-    print(f"Repeated Forward A-star (favoring lower g-values): {o1['path_to_goal']}")
-    # for x in range(len(o1['expanded'])):
-    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
-    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
-
-    # Send the maze (known) and path to traceDisplay
-    traceDisplay.display(rand_grid, o1['path_to_goal'])
-
-    total = 0
-    for x in o1['expanded']:
-        total += len(x)
-
-    print(f"Total cells expanded: {total}")
-
-    print((e1 - t1) * 10 ** 3, "ms")
-
-    print("---------------------")
-
-    t2 = time.time()
-    o2 = a_star.repeated_a_star(unknown, known, start, goal, "max_g_score", "forwards")
-
-    print(f"Repeated Forward A-star (favoring higher g-values): {o2['path_to_goal']}")
-    # for x in range(len(o2['expanded'])):
-    #     print(f"Iteration {x + 1}: {o2['expanded'][x]}")
-    #     print(f'Num of Cells expanded: {len(o2["expanded"][x])}')
-
-    total = 0
-    for x in o2['expanded']:
-        total += len(x)
-
-    print(f"Total cells expanded: {total}")
-    e2 = time.time()
-    print((e2 - t2) * 10 ** 3, "ms")
-
-
-def part_3(unknown, known, start, goal):
-    # Comparing A-star forward vs. backward
-    t3 = time.time()
-    o1 = a_star.repeated_a_star(unknown, known, start, goal, 'max_g_score', 'forwards')
-    e3 = time.time()
-
-    print(f"Repeated Forward A-star: {o1['path_to_goal']}")
-    # for x in range(len(o1['expanded'])):
-    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
-    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
-
-    total = 0
-    for x in o1['expanded']:
-        total += len(x)
-
-    print(f"Total cells expanded: {total}")
-
-    print((e3 - t3) * 10 ** 3, "ms")
-
-    print("---------------------")
-
-    t4 = time.time()
-
-    o1 = a_star.repeated_a_star(unknown, known, start, goal, 'max_g_score', 'backwards')
-    e4 = time.time()
-
-    print(f"Repeated Backward A-star: {o1['path_to_goal']}")
-    # for x in range(len(o1['expanded'])):
-    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
-    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
-
-    total = 0
-    for x in o1['expanded']:
-        total += len(x)
-
-    print(f"Total cells expanded: {total}")
-
-    print((e4 - t4) * 10 ** 3, "ms")
-
-
-def part_5(unknown, known, start, goal):
-    # Repeated Forward vs. Adaptive A-Star
-    t3 = time.time()
-    o1 = a_star.repeated_a_star(unknown, known, start, goal, 'max_g_score', 'forwards')
-    e3 = time.time()
-
-    print(f"Repeated Forward A-star: {o1['path_to_goal']}")
-    # for x in range(len(o1['expanded'])):
-    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
-    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
-
-    total = 0
-    for x in o1['expanded']:
-        total += len(x)
-
-    print(f"Total cells expanded: {total}")
-
-    print((e3 - t3) * 10 ** 3, "ms")
-
-    print("---------------------")
-
-    t4 = time.time()
-    o1 = a_star.adaptive_a_star(unknown, known, start, goal)
-    e4 = time.time()
-
-    print(f"Adaptive A-star: {o1['path_to_goal']}")
-    # for x in range(len(o1['expanded'])):
-    #     print(f"Iteration {x + 1}: {o1['expanded'][x]}")
-    #     print(f'Num of Cells expanded: {len(o1["expanded"][x])}')
-
-    total = 0
-    for x in o1['expanded']:
-        total += len(x)
-
-    print(f"Total cells expanded: {total}")
-
-    print((e4 - t4) * 10 ** 3, "ms")
-
 
 if __name__ == "__main__":
 
     if not os.path.isfile('./grids.json'):
+        print("Generating Mazes")
         generate_mazes.generate()
 
-    rand_grid_num = random.randint(0, 49)
-
     with open('grids.json', 'r') as file:
-        rand_grid = json.load(file)
-        rand_grid = rand_grid[rand_grid_num]
+        grids = json.load(file)
 
-    rand_start = random.randint(1, 101), random.randint(1, 101)
-    rand_goal = random.randint(1, 101), random.randint(1, 101)
+    print("Running comparisons...")
 
-    while rand_grid[rand_start[0]][rand_start[1]] == 1:
-        rand_start = random.randint(1, 101), random.randint(1, 101)
-    while rand_grid[rand_goal[0]][rand_goal[1]] == 1:
-        rand_goal = random.randint(1, 101), random.randint(1, 101)
+    path_data = comparisons.run_comparisons(grids)
 
-    print("Comparing Repeated Forward A-Star with both ties")
-    part_2(unknown="empty_maze.json", known=rand_grid, start=rand_start, goal=rand_goal)
-
-    print("=============================="
-          "=============================="
-          "==============================")
-
-    print("Comparing Repeated Forward vs. Backward A-Star")
-    part_3(unknown="empty_maze.json", known=rand_grid, start=rand_start, goal=rand_goal)
-
-    print("=============================="
-          "=============================="
-          "==============================")
-
-    print("Comparing Adaptive vs Repeated Forward A-Star")
-    part_5(unknown="empty_maze.json", known=rand_grid, start=rand_start, goal=rand_goal)
+    while True:
+        visualize = str(input("Visualize a Random Grid? Y/N: "))
+        if visualize.lower() == "y":
+            astar_type = int(input(
+                                   "Repeated Forward (ties favoring greater g-score) [0]\n"
+                                   "Repeated Forward A* (ties favoring lower g-score) [1]\n"
+                                   "Repeated Backward A* [2]\n"
+                                   "Adaptive A* [3] \n"
+                                   "Enter A* type: "
+            ))
+            random_grid_num = random.randint(0, 49)
+            if astar_type == 0:
+                maze_display.display_path(grids[random_grid_num],
+                                          path_data['forwards_astar_max'][random_grid_num]['path_to_goal'])
+            elif astar_type == 1:
+                maze_display.display_path(grids[random_grid_num],
+                                          path_data['forwards_astar_min'][random_grid_num]['path_to_goal'])
+            elif astar_type == 2:
+                maze_display.display_path(grids[random_grid_num],
+                                          path_data['backwards_astar'][random_grid_num]['path_to_goal'])
+            elif astar_type == 3:
+                maze_display.display_path(grids[random_grid_num],
+                                          path_data['adaptive_astar'][random_grid_num]['path_to_goal'])
+        elif visualize.lower() == 'n':
+            break

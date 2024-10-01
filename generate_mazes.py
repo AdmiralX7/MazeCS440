@@ -1,14 +1,8 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.colors as mcolors
 import random
 import json
-import time
-import a_star
 
 
-# ------------------ FUNCTIONS ------------------
-def chooseRandomCell():
+def choose_random_cell(grid):
     unvisitedCells = []
     for x in range(len(grid)):
         for y in range(len(grid[0])):
@@ -16,12 +10,12 @@ def chooseRandomCell():
                 unvisitedCells.append((x, y))
 
     if not unvisitedCells:
-        return None  # No more unvisited cells
+        return None
 
     return random.choice(unvisitedCells)
 
 
-def getNeighbors(x, y):
+def get_neighbors(grid, x, y):
     neighbors = []
 
     # Check the North neighbor
@@ -43,50 +37,10 @@ def getNeighbors(x, y):
     return neighbors
 
 
-def blockProbability(x, y):
-    if random.random() < 0.3:  # 30% probability
-        grid[x][y]['blocked'] = True
-        return True
-    else:  # 70% probability
-        grid[x][y]['blocked'] = False
-        return False
-
-
-def mazeArray(receivedGrid):
-    # Create an array of 1's and 0's from the grid
-    gridArray = []
-    for row in receivedGrid:
-        newRow = []
-        for cell in row:
-            if cell['blocked']:
-                newRow.append(1)
-            else:
-                newRow.append(0)
-        gridArray.append(newRow)
-
-    return gridArray
-
-
-def displayMaze(receivedArray):
-    # Convert gridArray to a numpy array for imshow
-    npArray = np.array(receivedArray)
-
-    # Save the grid array to a text file
-    np.savetxt('mazeGrid..json', npArray, fmt='%d')
-
-    # Define a custom colormap: white for 0 and black for 1
-    cmap = mcolors.ListedColormap(['white', 'black'])
-
-    # Display the maze
-    plt.imshow(npArray, cmap=cmap, interpolation='none')
-    plt.title('Maze Visualization')
-    plt.show()
-
-
-def saveGridsToJson(receivedGrid, filename='grids.json'):
+def save_grids_to_json(received_grid, filename='grids.json'):
     gridsList = []
 
-    for grid in receivedGrid:
+    for grid in received_grid:
         gridArray = []
         for row in grid:
             newRow = []
@@ -99,95 +53,68 @@ def saveGridsToJson(receivedGrid, filename='grids.json'):
         json.dump(gridsList, f)
 
 
-# Function to load grids from a JSON file
-def loadGridsFromJson(filename='grids.json'):
-    with open(filename, 'r') as f:
-        gridsList = json.load(f)
+def block_probability(grid, x, y):
+    if random.random() < 0.3:
+        grid[x][y]['blocked'] = True
+        return True
+    else:
+        grid[x][y]['blocked'] = False
+        return False
 
-    # Convert back to grid format if needed
-    grids = []
-    for gridArray in gridsList:
-        grid = []
-        for row in gridArray:
-            newRow = [{'blocked': bool(cell), 'visited': False} for cell in row]
-            grid.append(newRow)
-        grids.append(grid)
 
-    return grids
-
-# --------------------- MAIN ---------------------
 def generate():
-    # Start the timer
-    startTime = time.time()
-
-    global allGrid
-    allGrid = []
-
-    # Simulate saving 50 grids
-    for i in range(50):
-        # --------------- MAP Initialization ---------------
-
-        gridSize = 101
-        # Initialize an empty grid list
-        global grid
+    all_grid = []
+    for x in range(50):
+        grid_size = 101 + 2
         grid = []
 
-        # Create each row and add to the grid
-        for i in range(gridSize):
+        for y in range(grid_size):
             row = []
-            for j in range(gridSize):
-                # Append a dictionary to the row
+            for j in range(grid_size):
                 row.append({'visited': False, 'blocked': False})
 
-            # Append the row to the grid
             grid.append(row)
 
-        # Add blocked boundaries around the edges
-        for i in range(gridSize):
+        for i in range(grid_size):
             grid[0][i]['blocked'] = True  # Top boundary
-            grid[gridSize - 1][i]['blocked'] = True  # Bottom boundary
+            grid[grid_size - 1][i]['blocked'] = True  # Bottom boundary
             grid[i][0]['blocked'] = True  # Left boundary
-            grid[i][gridSize - 1]['blocked'] = True  # Right boundary
+            grid[i][grid_size - 1]['blocked'] = True  # Right boundary
 
-        # Stack to manage the DFS traversal
         stack = []
 
-        # Simulate the runner moving through the maze
         movements = []
 
         while True:
             # If the stack is empty, choose a new random starting position
             if not stack:
                 # Choose a random starting point within the grid
-                initialCell = chooseRandomCell()
+                initialCell = choose_random_cell(grid)
 
                 if not initialCell:
                     print("All cells have been visited. Exiting the code.")
-                    break  # Exit the loop and terminate the program
+                    break
 
                 InitialX, InitialY = initialCell
 
                 stack.append((InitialX, InitialY))
                 movements.append((InitialX, InitialY))
 
-                # Mark the start cell as visited
                 grid[InitialX][InitialY]['visited'] = True
                 # print(f"New starting point chosen: ({InitialX}, {InitialY})")
 
             # Current position is the last position in the stack
             currentX, currentY = stack[-1]
 
-            possibleMoves = getNeighbors(currentX, currentY)
+            possibleMoves = get_neighbors(grid, currentX, currentY)
 
             if not possibleMoves:
-                # No more moves from this position, backtrack
                 stack.pop()
             else:
-                # Randomly choose a neighbor to move to
                 nextMove = random.choice(possibleMoves)
                 # print("Attempting to move to:", nextMove)
 
-                if blockProbability(nextMove[0], nextMove[1]):
+                if block_probability(grid, nextMove[0], nextMove[1]):
                     # print("Blocked cell encountered:", nextMove)
                     grid[nextMove[0]][nextMove[1]]['visited'] = True
                     grid[nextMove[0]][nextMove[1]]['blocked'] = True
@@ -201,23 +128,5 @@ def generate():
                     movements.append(nextMove)
                     grid[nextMove[0]][nextMove[1]]['visited'] = True
 
-        allGrid.append(grid)
-    """
-        grid = mazeArray(grid)
-        displayMaze(grid)
-    """
-
-    saveGridsToJson(allGrid)
-    loadedGrids = loadGridsFromJson()
-
-    # Stop the timer
-    endTime = time.time()
-
-    # Calculate and print the total time taken
-    totalTime = endTime - startTime
-    print(f"Total time taken: {totalTime:.2f} seconds")
-
-    # To access a specific grid, say the first one:
-    # firstGrid = loadedGrids[0]
-    # firstGrid = mazeArray(firstGrid)
-    # displayMaze(firstGrid)
+        all_grid.append(grid)
+        save_grids_to_json(all_grid)
